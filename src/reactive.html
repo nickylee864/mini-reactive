@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>reactive</title>
+    <script src="reactive.js"></script>
+    <script src="effect.js"></script>
+    <script src="computed.js"></script>
+</head>
+<body>
+<script>
+    const obj = {name: 'Lily', age: 12, state: true}
+
+    // const runObj = new Proxy(obj, {
+    //     set(target, key, newVal) {
+    //         console.log('proxy setter')
+    //         target[key] = newVal
+    //         trigger(target, key)
+    //     },
+    //     get(target, key) {
+    //         track(target, key)
+    //         return target[key]
+    //     }
+    // })
+    const runObj = reactive(obj)
+    var fn = () => {
+        // const nextAge = runObj.age + 1
+        console.log('fn run')
+        const name = runObj.state ? runObj.name : 'has gone'
+        return `${name}: ${runObj.age}`
+    }
+    const cptRs = computed(fn)
+    effect(() => {
+        // 外层effect调用
+        console.log('外层effect调用')
+        // console.log(cptRs.value)
+        for (let it in runObj) {
+            console.log(it)
+        }
+    })
+
+    // 多次赋值只执行一次副作用函数，执行时赋值为最后一次的值
+    // let isFlushing = false
+    // let runSet = new Set()
+    // let microQue = Promise.resolve()
+    // effect(fn, {
+    //     scheduler: ignoreResetsScheduler
+    // })
+    //
+    // function ignoreResetsScheduler(effectFn) {
+    //     runSet.add(effectFn)
+    //     flushJob()
+    // }
+    //
+    // function flushJob() {
+    //     if (isFlushing) {
+    //         return
+    //     }
+    //     isFlushing = true
+    //     microQue.then(() => {
+    //         runSet.forEach(ef => ef())
+    //     }).finally(() => {
+    //         isFlushing = false
+    //     })
+    // }
+    // // 对应以上情况测试
+    // runObj.name = 'Tom'
+    // runObj.name = 'Jerry'
+    // runObj.name = 'Jack'
+
+
+    // console.log(bucket.get(obj).get('name'), 'name=> ef1111')
+    // console.log(bucket.get(obj).get('state'), 'state=> ef11111')
+    //
+    // runObj.state = false
+    // console.log(bucket.get(obj).get('name'), 'name=> ef2222')
+    // console.log(bucket.get(obj).get('state'), 'state=> ef2222')
+    //
+    // runObj.name = 'Lucy'
+    const obj = {
+        val: 0,
+        [Symbol.iterator]() {
+            return {
+                next() {
+                    return {
+                        value: this.val,
+                        done: this.val > 10 ? true : false
+                    }
+                }
+            }
+        }
+    }
+    for(const it of obj){
+        console.log(it)
+    }
+</script>
+</body>
+</html>

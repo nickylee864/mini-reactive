@@ -1,5 +1,6 @@
-var activeEffect
-var effectStack = []
+let activeEffect;
+const effectStack = [];
+
 function effect(fn, options ={}){
     const effectFn = () => {
         cleanUp(effectFn)
@@ -7,7 +8,7 @@ function effect(fn, options ={}){
         effectStack.push(effectFn)
         const res = fn() // 读取一次需要绑定的对象属性，此时会触发track
         effectStack.pop()
-        activeEffect = effectStack[effectStack.length - 1] // 还原副作用函数栈前一级
+        activeEffect = effectStack[effectStack.length - 1] // activeEffect取到栈尾的副作用函数
         return res
     }
     effectFn.deps = []
@@ -25,4 +26,8 @@ function cleanUp(effectFn){
     }
     // 删除effectFn.deps中的depsMap
     effectFn.deps.length = 0
+}
+export {
+    activeEffect,
+    effect
 }

@@ -1,3 +1,4 @@
+import {activeEffect} from './effect'
 const ITERATE_KEY = Symbol()
 function reactive(obj, isShallow = false, readonly = false){
     return new Proxy(obj, {

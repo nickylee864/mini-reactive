@@ -1,3 +1,5 @@
+import {effect} from "./effect";
+import {trigger, track} from './reactive'
 function computed(getter){
     let dirty = true
     let memo

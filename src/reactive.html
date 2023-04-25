@@ -83,8 +83,8 @@
             return {
                 next() {
                     return {
-                        value: this.val,
-                        done: this.val > 10 ? true : false
+                        value: obj.val,
+                        done: obj.val++ > 10 ? true : false
                     }
                 }
             }

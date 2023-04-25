@@ -1,6 +1,10 @@
+import { effect } from './effect.js'
+import {reacive, shallowReactive} from './reactive.js'
+import { queueJob, resolveProps } from './utils.js'
 const Text = Symbol()
 const Comment = Symbol()
 const Fragment = Symbol()
+
 function createRenderer(options){
     const {
         createElement,
@@ -114,13 +118,16 @@ function createRenderer(options){
             }else{
                 patchChildren(oldNode, newNode, container)
             }
-        }else if(typeof newNodeType === 'object'){
-            // 组件
+        }else if(typeof newNodeType === 'object'){ // 组件
+            if(!oldNode){
+                mountComponent(oldNode, newNode, container, anchor)
+            }else{
+                patchComponent(oldNode, newNode, anchor)
+            }
         }else if(newNodeType === 'xxxx'){
             // 其他类型的vnode
+
         }
-
-
     }
     function patchProps(el, key, prevValue, nextValue) {
         if(/^on/.test(key)){
@@ -179,6 +186,59 @@ function createRenderer(options){
         }
         insert(el, container, anchor)
     }
+    function mountComponent(vnode, container, anchor){
+        // 组件的选项对象
+        const componentOptions = vnode.type
+        const {render, data, props: propsOption, beforeCreate, created, beforeMount, mounted, beforeUpdate, updated} = componentOptions
+        beforeCreate && beforeCreate()
+        const state = reacive(data())
+        const [props, attrs] = resolveProps(propsOption, vnode.props)
+        const instance = {
+            state,
+            props: shallowReactive(props),
+            isMounted: false,
+            subTree
+        }
+        vnode.component = instance
+        const renderContext = new Proxy(instance, {
+            get(t, k, r){
+                const {state, props} = t
+                if(state && k in state){
+                    return state[k]
+                }else if(k in props){
+                    return props[k]
+                }else{
+                    console.error('不存在')
+                }
+            },
+            set(t, k, v, r){
+                const {state, props} = t
+                if(state && k in state){
+                    state[k] = v
+                }else if(k in props){
+                    props[k] = v
+                }else{
+                    console.log('不存在');
+                }
+            }
+        })
+        created && created.call(renderContext)
+        effect(() => {
+            const subTree = render.call(state, state)
+            if(!instance.isMounted){
+                beforeMount && beforeMount.call(renderContext)
+                patch(null, subTree, container, anchor)
+                instance.isMounted = true
+                mounted && mounted()
+            }else{
+                beforeUpdate && beforeUpdate.call(renderContext)
+                patch(instance.subTree, subTree, container, anchor)
+                updated && updated.call(renderContext)
+            }
+            instance.subTree = subTree
+        }, {scheduler: queueJob})
+        
+    }
     function unmount(vnode) {
         if(vnode.nodeType === Fragment){
             vnode.children.forEach(c => unmount(c))
@@ -222,6 +282,21 @@ function createRenderer(options){
                 // 新的数组，老节点是空或者字符串
                 setElementText(container, '')
                 n2.children.forEach( node => patch(null, node, container) )
+            }
+        }
+    }
+    function patchComponent(n1, n2, anchor){
+        const instance = (n2.component = n1.component)
+        const {props} = instance
+        if(hasPropChanged(n1.props, n2.props)){
+            const [nextProps] = resolveProps(n2.type.props, n2.props)
+            for(const k in nextProps){
+                props[k] = nextProps[k]
+            }
+            for(const k in props){
+                if(!(k in nextProps)){
+                    delete props[k]
+                }
             }
         }
     }

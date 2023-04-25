@@ -1,23 +1,35 @@
 import { effect } from './effect'
-function watch(source, cb){
+export function watch(source, cb, options = {}){
     let getter, newVal, oldVal
     if(typeof source === 'function'){
         getter = source
     }else{
         getter = traverse
     }
+    const job = () => {
+        let newVal = effectFn()
+        cb(newVal, oldVal)
+        oldVal = newVal
+    }
     const effectFn = effect(
         () => getter(),
         {
             lazy: true,
-            scheduler(){
-                let newVal = effectFn()
-                cb(newVal, oldVal)
-                oldVal = newVal
+            scheduler: () => {
+                if(options.flush === 'post'){
+                    const p = Promise.resolve()
+                    p.then(job)
+                }else{
+                    job()
+                }
             }
         }
     )
-    oldVal = effectFn()
+    if(options.immediate){
+        job()
+    }else{
+        oldVal = effectFn()
+    }
 }
 
 function traverse(obj, seen = new Set()){

@@ -1,6 +1,6 @@
 import {activeEffect} from './effect'
 const ITERATE_KEY = Symbol()
-function reactive(obj, isShallow = false, readonly = false){
+export function reactive(obj, isShallow = false, readonly = false){
     return new Proxy(obj, {
         get(target, key, receiver){
             if(key === 'raw'){
@@ -47,14 +47,17 @@ function reactive(obj, isShallow = false, readonly = false){
         }
     })
 }
-function readonlyReactive(obj){
+export function readonlyReactive(obj){
     return reactive(obj, false, true)
 }
-function shallowReadonlyReactive(obj){ // 浅只读
+export function shallowReadonlyReactive(obj){ // 浅只读
     return reactive(obj, true, true)
 }
+export function shallowReactive(){
+    return reactive(obj, true)
+}
 const bucket = new WeakMap()
-function trigger(target, key, type){
+export function trigger(target, key, type){
     console.log(target, key, '+++trigger+++' + key)
     const depsMap = bucket.get(target)
     if(!depsMap){ return }
@@ -83,7 +86,7 @@ function trigger(target, key, type){
     } )
 }
 
-function track(target, key){
+export function track(target, key){
     console.log(target, key,'+++track+++')
     if(!activeEffect) return
     let depsMap = bucket.get(target)
@@ -106,7 +109,7 @@ function track(target, key){
 // })
 // 解决上述问题
 // let set = new Set([1])
-// let r unset = new Set(set)
+// let runset = new Set(set)
 // runset.forEach(it => {
 //     set.delete(1)
 //     set.add(1)

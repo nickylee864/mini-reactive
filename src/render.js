@@ -279,7 +279,7 @@ function createRenderer(options){
                 }
 
             }else{
-                // 新的数组，老节点是空或者字符串
+                // 新的数组，老节点是空
                 setElementText(container, '')
                 n2.children.forEach( node => patch(null, node, container) )
             }

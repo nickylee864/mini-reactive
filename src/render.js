@@ -268,6 +268,8 @@ function createRenderer(options){
             if(Array.isArray(n1.children)){
                 n1.children.forEach( node => unmount(node) )
             }
+
+            
             setElementText(container, n2.children)
         }else if(Array.isArray(n2.children)){
             if(Array.isArray(n1.children)){ // n1 n2的子节点都是数组
